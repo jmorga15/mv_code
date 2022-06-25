@@ -489,13 +489,12 @@ def MV_antigen_dist5(antigen_coordinates, coordinates, r, loc, P, N):
 #
 #    return(accumulator)
 def signal_accumulator_dir(P, tau, accumulator, k_act, gam, N, Xact, t):
-    #print("accum before update", accumulator)
+    #number of activated TCRs
     signaling_mv = P[N+3,0]
-    #print("sig_mv =",signaling_mv)
 
-    ### first, add up the nodes that are already accumulating signal ###
-    ### 0 indicates the node has been accumulating signal ###
 
+    ### be careful of blowups. the update rule for signal only works in small time increments.
+    ### break up larger time increments to smaller time increments
     if tau > 0.1:
         #print("hi")
         #print(tau)

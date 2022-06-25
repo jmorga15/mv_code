@@ -12,34 +12,34 @@ import time
 
 def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
     
-    # running sum of the concentration of mv in stabilized states #
-    #uconc = 0
-    #uconc_list = np.zeros((1,1))
-    #tau_list = np.zeros((1,1))
+    # initializing maximum signal accumulation for simulation #
     Xmax = 0.0
-    ### array for recording average area covered by MV ###
-    #area_event = np.zeros((1,1))
-    #area_event[0] = 0
+
+    ### the time duration of the cellular contact, i.e., the simulation time ###
+    ### can be shorter if the model activates ###
+    t_sim = 60
     
-    # a variable for storing accumulated signal #
+    # a variable for storing accumulated signal from activated TCRs #
     accumulator = 0.0
     
-    # an array for collecting lifetime intervals #
-    # used for histogram of MV lifetimes #
-    #mv_lifetime_index = np.cumsum(np.ones((1,340)) / 4.0)
-
-    lt_bin = np.zeros((1,340))
-    
-    
+    ### the radius of the cell contact area
     r_is = 1.0
+    
+    ### the radius of the MV ###
     r = 0.05345224838248488
-    #r = 0.0313727
     
     # This is the average number of MV found with a set radius that fill the immunological synapse #
     # This is determined by multiple simulations of randomly placing MV in a circle #
+    # the process to establish ave_max is to choose a MV radius, then utilize the packing simulation code
+    # to determine the approximate number of MV contacts that can fit in the cell contact area via
+    # random packing #
     ave_max = 60
-    #ave_max = 512
     
+    ### this initializes the MV positions before the contact starts ###
+    ### the purpose for this is because MV movements and positions exist even
+    ### when the cell is not in contact with another cell. The basic idea of 
+    ### the function mv0 is to run a simulation with no antigen for approx 10s
+    ### before the actual simulation. This also 
     coordinates = mv0(r, ave_max)
     
     ### Add antigen to simulation ###
@@ -106,103 +106,6 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
     # They are given their own pathway in order to track placement and transitions. For example, a MV that covers two antigen cannot #
     # transition to a state where it only covers one antigen. This is because the antigen in this model are fixed #
     # The simulation allows for the possibility of 20 antigen being covered. The placement of antigen takes this into consideration #
-#    T = np.zeros((482,482))
-#    T[0][1] = ka
-#    T[1][0] = kd
-#    for i in range(20):
-#        T[i+2][0] = kd
-#        T[i+2][i+20+2] = kon*(i+1)
-#    for i in range(20):
-#        T[i+2+20][0] = kd
-#        T[i+2+20][i+2] = koff
-#        T[i+2+20][i+2+40] = kt
-#    for i in range(20):
-#        T[i+2+40][0] = kd
-#        T[i+2+40][i+2] = koff
-#        T[i+2+40][i+2+60] = kt
-#    for i in range(20):
-#        T[i+2+60][0] = kd
-#        T[i+2+60][i+2] = koff
-#        T[i+2+60][i+2+80] = kt
-#    for i in range(20):
-#        T[i+2+80][0] = kd
-#        T[i+2+80][i+2] = koff
-#        T[i+2+80][i+2+100] = kt
-#    for i in range(20):
-#        T[i+2+100][0] = kd
-#        T[i+2+100][i+2] = koff
-#        T[i+2+100][i+2+120] = kt
-#    for i in range(20):
-#        T[i+2+120][0] = kd
-#        T[i+2+120][i+2] = koff
-#        T[i+2+120][i+2+140] = kt
-#    for i in range(20):
-#        T[i+2+140][0] = kd
-#        T[i+2+140][i+2] = koff
-#        T[i+2+140][i+2+160] = kt
-#    for i in range(20):
-#        T[i+2+160][0] = kd
-#        T[i+2+160][i+2] = koff
-#        T[i+2+160][i+2+180] = kt
-#    for i in range(20):
-#        T[i+2+180][0] = kd
-#        T[i+2+180][i+2] = koff
-#        T[i+2+180][i+2+200] = kt
-#    for i in range(20):
-#        T[i+2+200][0] = kd
-#        T[i+2+200][i+2] = koff
-#        T[i+2+200][i+2+220] = kt
-#    for i in range(20):
-#        T[i+2+220][0] = kd
-#        T[i+2+220][i+2] = koff
-#        T[i+2+220][i+2+240] = ks
-#    for i in range(20):
-#        T[i+2+240][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+260][i+2] = ku
-#        T[i+2+260][i+2+280] = kon2*(i+1)
-#    for i in range(20):
-#        T[i+2+280][i+2+20] = ku
-#        T[i+2+280][i+2+300] = kt2
-#        T[i+2+280][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+300][i+2+40] = ku
-#        T[i+2+300][i+2+320] = kt2
-#        T[i+2+300][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+320][i+2+60] = ku
-#        T[i+2+320][i+2+340] = kt2
-#        T[i+2+320][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+340][i+2+80] = ku
-#        T[i+2+340][i+2+360] = kt2
-#        T[i+2+340][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+360][i+2+100] = ku
-#        T[i+2+360][i+2+380] = kt2
-#        T[i+2+360][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+380][i+2+120] = ku
-#        T[i+2+380][i+2+400] = kt2
-#        T[i+2+380][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+400][i+2+140] = ku
-#        T[i+2+400][i+2+420] = kt2
-#        T[i+2+400][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+420][i+2+160] = ku
-#        T[i+2+420][i+2+440] = kt2
-#        T[i+2+420][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+440][i+2+180] = ku
-#        T[i+2+440][i+2+460] = kt2
-#        T[i+2+440][i+2+260] = koff
-#    for i in range(20):
-#        T[i+2+460][i+2+200] = ku
-#        T[i+2+460][i+2+240] = kt2
-#        T[i+2+460][i+2+260] = koff
-#    
-    #P = np.zeros((16,1))
 
     # The number of TCRs in a simulation. In the control, this is equal to the number of antigen #
     #P[0][0] = av
@@ -268,8 +171,6 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
         if t + tau > 30.0:
             #print("hi2")
             tau = 30.0 - t
-            #print(tau)
-            #break
         
         # Second random number #
         r2 =  np.random.uniform(0,1)
@@ -283,9 +184,10 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
         Rminus = Rcs - r2*w1
         transit = np.where(Rminus == np.min(Rminus[Rminus > 0]))
     
-        # update the amount of signal accumulated #
-        #print("accum before function =",accumulator)
+        # update the amount of signal accumulated from activated TCRs in time step tau #
         (accumulator, tstar) = signal_accumulator_dir(P, tau, accumulator, k_act, gam, N, xact, t)
+        
+        ### records the maximum signal obtained, even given a decay, over a simulation ###
         if accumulator > Xmax:
             Xmax = accumulator
             
@@ -552,8 +454,9 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
 #print (accumulator,t)
 
 
-
-
+(accumulator, t, x) = mv_sim_num_direct( 1, 1.6, 100, 3 )
+print(accumulator)
+print(x)
 
 
 

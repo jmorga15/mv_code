@@ -60,11 +60,10 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
             antigen_coordinates[i,1] = theta
             
             i = i + 1
-    #print("len", len(antigen_coordinates))
+            
     ### Find antigen in contact proximity of MV and change the state vector ###       
     antigen_coordinates = MV_antigen_dist2(antigen_coordinates, coordinates, r)
-    #print(len(antigen_coordinates))
-    #print("len", len(antigen_coordinates))
+    
     ### Setting the relevant rates ###
     kd = 1.8
     kon = 100.0
@@ -81,23 +80,14 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
     ### Initializing the population vector ###
     P = np.zeros((N+7,1))
     
-    # Set a separate state for every group of MVs covering a specific number of antigen #
-    #for i in range(len(P[0:23]) - 1):
-        # the fifth column of the coordinate matrix denotes the number of antigen within binding range of the MV #
-        #P[i+1][0] = np.sum(coordinates[:,5] == 1)
-        
-    # The number of MV still capable of being added to the simulation #
-    
+    ### P[1,0] is the population of MV contacts with the APC ###
     P[1,0] = len(coordinates)
-    P[0][0] = ave_max - P[1,0]
-    P[2,0] = len(np.where(antigen_coordinates[:,2]>=2)[0])
-    #print(len(np.where(antigen_coordinates[:,2]>=2)[0]))
-    #print(np.where(antigen_coordinates[:,2]>=2))
-    #print("im here",antigen_coordinates)
-
     
-    # set the coordinate states according to their number of antigen covered #
-    #coordinates[:,2] = coordinates[:,5] + 1
+    ### P[0,0] is the  population of MV contacts that can be added ###
+    P[0,0] = ave_max - P[1,0]
+    
+    ### P[2,0] is the population of antigen that are covered by MV contact ###
+    P[2,0] = len(np.where(antigen_coordinates[:,2]>=2)[0])
 
     
     
@@ -137,7 +127,7 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
     gam = 0.0
     maxT = k_act/(k_act + gam)
     xact = 0.90*maxT
-    while t < 30 and accumulator < xact:
+    while t < t_sim and accumulator < xact:
 
         # The Direct Gillespie Algorithm #
         # The first random number #
@@ -168,9 +158,10 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
         # generate the next time #
         tau = 1.0 / w1 * np.log(1.0/r1)
         
-        if t + tau > 30.0:
-            #print("hi2")
-            tau = 30.0 - t
+        
+        ### time cannot exceed the cellular contact time ###
+        if t + tau > t_sim:
+            tau = t_sim - t
         
         # Second random number #
         r2 =  np.random.uniform(0,1)
@@ -192,10 +183,11 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
             Xmax = accumulator
             
         t = t + tau
+        
+        ### tstar is the time in which the simulation first surpassed the required activation signal ###
+        ### i.e., this is the stopping time when the activation signal is reached ###
         if accumulator > xact:
             t = tstar
-        #print("accum after function =",accumulator)
-        #accumulator = XX + 0.0
         
         # the 4th column is the individual MV lifetime #
         # add the next reaction time to the MV lifetimes #
@@ -233,20 +225,10 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
         # also, not worrying about active and inactive MV#
         elif transit[1][0] > 0 and transit[0][0] > 1:
 
-            # a random number for every antigen that is capable of the transition
-            #print("transit",transit)
-#            ru = np.random.uniform(0,1, size = (int(np.sum(antigen_coordinates[:,2] == transit[0][0]))))
-##            print("transit",transit)
-##            print("ru",ru)
-##            print("antigen coord",antigen_coordinates)
-##            print("pop",P)
-#            # find the max value #
-#            rmax = np.where(ru == np.max(ru))[0]
-
-            # get the location of antigen capable of making the transition #
-            #loc_mv = np.where(antigen_coordinates[:,2] == transit[0][0])[0]
             
             # an antigen transition that allows MV to become stabilized, so possible 2 transitions, if mv is not in pre-stab
+            ### index N+3 is corresponds to the activated TCR state ###
+            ### transit[1][0] is the state in which the previous state is transitioning to ###
             if transit[1][0] == N+3:
                 ru = np.random.uniform(0,1, size = (int(np.sum(antigen_coordinates[:,2] == transit[0][0]))))
 
@@ -260,14 +242,17 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
                 P[transit[1][0],0] = P[transit[1][0],0] + 1
                 
             # possible antigen transition that removes mv from stab intermediate #
+            ### the N+3 index corresponds to activated TCRs ###
+            ### transit[0][0] is the initial state that is transitionsing ###
+            ### TCRs in this state have only one possible transition and that is dissociation (see model) ###
+            ### Have to adjust the population state and check to see if this was the sole activated TCR ###
+            ### if it is, the MV_antigen_dist5 will remove the mvcontact from the "Can be Stabilized" state ###
             elif transit[0][0] == N+3:
-                #print("transit",transit)
-                #print('why')
+                
                 ru = np.random.uniform(0,1, size = (int(np.sum(antigen_coordinates[:,2] == transit[0][0]))))
 
                 rmax = np.where(ru == np.max(ru))[0]
                 loc_mv = np.where(antigen_coordinates[:,2] == transit[0][0])[0]
-                #print("hi")
                 
                 # update MV information
                 coordinates,P = MV_antigen_dist5(antigen_coordinates, coordinates, r, loc_mv[rmax],P, N)
@@ -276,10 +261,11 @@ def mv_sim_num_direct( antigen_count, k_off, k_s, Nkp ):
                 antigen_coordinates[loc_mv[rmax],2] = transit[1][0]
                 P[transit[0][0],0] = P[transit[0][0],0] - 1
                 P[transit[1][0],0] = P[transit[1][0],0] + 1
-                #print("P2",P)
+
                 
             # MV contact is stabilized #
-            ###  ###
+            ### the N+4 index cooresponds to unstabilized MV that can become stabilized ###
+            ### the N+5 index corresponds to stabilized MV ###
             elif transit[0][0] == N+4 and transit[1][0] == N+5:
                 #print("transit",transit)
                 #print(P)

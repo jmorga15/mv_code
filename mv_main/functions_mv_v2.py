@@ -81,7 +81,6 @@ def gen_tau(kx, l):
 def gen_tau_kon(kx, l, coordinates):
     
     loc_nodes = np.where(coordinates[:,2] == 1)
-    coordinates[loc_nodes,]
     ### generate a random vector of size l ###
     u = np.random.uniform(low=0.0, high=1.0, size=(l,))
 
@@ -216,6 +215,13 @@ def MV_antigen_dist3(antigen_coordinates, coordinates, r, loc, P, N):
 
 
 def MV_antigen_dist1(antigen_coordinates, coordinates, r,P):
+    
+    ### this function finds the number of antigen that are within an MV contact Boundary ###
+    
+    ### takes the state matrix for antigen and MV (antigen_coordinates and coordinates), as well as MV radius and population vector P ###
+    
+    ### modifies the antigen states in antigen_coordinates to reflect coverage by MV (state 2) ###
+    
     
     x_antigen = antigen_coordinates[:,0] * np.cos(antigen_coordinates[:,1])
     y_antigen = antigen_coordinates[:,0] * np.sin(antigen_coordinates[:,1])
